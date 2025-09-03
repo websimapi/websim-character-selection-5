@@ -82,10 +82,8 @@ async function init() {
     scene.add(wallBack);
 
     // --- TV ---
-    const tvScreenElement = document.getElementById('start-overlay');
-    tvScreenElement.classList.remove('hidden'); // Make it available for CSS3DRenderer
-    tvScreenElement.style.backgroundColor = 'black';
-    tvScreenElement.style.backgroundImage = 'none';
+    const tvScreenElement = document.getElementById('tv-screen-placeholder');
+    tvScreenElement.style.display = 'block'; // Make it available for CSS3DRenderer
 
     const tvScreen = new CSS3DObject(tvScreenElement);
     const screenWidth = 3;
@@ -182,7 +180,7 @@ function onCartridgeInsert() {
     if (window.resumeAudioContext) window.resumeAudioContext();
     if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
-    const tvScreenElement = document.getElementById('start-overlay');
+    const tvScreenElement = document.getElementById('tv-screen-placeholder');
     const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
     const noiseElement = document.getElementById('tv-noise');
 
@@ -200,19 +198,14 @@ function onCartridgeInsert() {
             // Start static noise
             noiseElement.classList.add('active');
         }, null, "-=0.2")
-        .to(startContentWrapper, { 
-            opacity: 1, 
-            duration: 1, 
-            ease: 'power1.inOut',
-            delay: 3 // Wait for 3 seconds of static
-        })
         .call(() => {
-            // Stop static noise and show game background
+            // Stop static noise and show game background on the 3D TV
             noiseElement.classList.remove('active');
-            tvScreenElement.style.backgroundImage = `
+            startContentWrapper.style.backgroundImage = `
                 radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
                 url('/main-menu-background.png')`;
-        }, null, "-=1");
+            startContentWrapper.style.opacity = '1';
+        }, null, "+=3"); // Show background after 3 seconds of static
     
     // Define the target for the camera to look at
     const tvLookAtTarget = new THREE.Vector3(0, 1.7, -5);
@@ -250,42 +243,19 @@ function onCartridgeInsert() {
 }
 
 function transitionToApp() {
-    // Smoothly fade out the 3D scene
-    gsap.to(introContainer, {
-        opacity: 0,
-        duration: 0.5,
+    // Smoothly fade out the 3D scene and fade in the real UI
+    const startOverlay = document.getElementById('start-overlay');
+    startOverlay.classList.remove('hidden');
+    startOverlay.style.opacity = '0'; // Start transparent for fade-in
+
+    gsap.timeline({
         onComplete: () => {
             introContainer.style.display = 'none';
-            
-            const startOverlay = document.getElementById('start-overlay');
-            // Re-parent the overlay to the body to escape the 3D renderer's container
-            document.body.appendChild(startOverlay);
-
-            // Properly restore the overlay for normal 2D app usage
-            startOverlay.className = ''; // Clear all classes
-            startOverlay.style.cssText = ''; // Clear all inline styles
-            
-            // Restore the normal background styling
-            startOverlay.style.backgroundImage = `
-                radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
-                url('/main-menu-background.png')`;
-            startOverlay.style.backgroundSize = 'cover';
-            startOverlay.style.backgroundPosition = 'center';
-
-            // Ensure it's visible and properly positioned
-            startOverlay.style.position = 'fixed';
-            startOverlay.style.top = '0';
-            startOverlay.style.left = '0';
-            startOverlay.style.width = '100%';
-            startOverlay.style.height = '100%';
-            startOverlay.style.display = 'flex';
-            startOverlay.style.justifyContent = 'center';
-            startOverlay.style.alignItems = 'center';
-            startOverlay.style.zIndex = '100';
-
-            if(window.startApp) window.startApp();
+            if (window.startApp) window.startApp();
         }
-    });
+    })
+    .to(introContainer, { opacity: 0, duration: 0.5 }, 0)
+    .to(startOverlay, { opacity: 1, duration: 0.5 }, 0);
 }
 
 // --- Dragging Logic ---

@@ -41,13 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function startApp() {
     console.log("Starting main application...");
     
+    // The start overlay is now visible thanks to transitionToApp.
+    // The character selection screen remains hidden until a mode is chosen.
+
     // Hide preloader if it's still somehow visible
     const preloader = document.getElementById('preloader');
     if (preloader) preloader.classList.add('hidden');
-    
-    // The start overlay should be visible at this point.
-    // We remove the hidden class just in case.
-    document.getElementById('start-overlay').classList.remove('hidden');
     
     // Now that the main app is showing, it's safe to start music
     window.startAppMusic = true;

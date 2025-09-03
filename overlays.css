@@ -44,6 +44,9 @@
     left: 0;
     width: 100%;
     height: 100%;
+    background-image: 
+        radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
+        url('/main-menu-background.png');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -54,17 +57,9 @@
     transition: opacity 0.5s ease-out;
 }
 
-#start-overlay:not(.transition-complete) {
-     background-image: none;
-     background-color: transparent;
-}
-
-#start-overlay.transition-complete .start-content-wrapper {
-    background-image: 
-        radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
-        url('/main-menu-background.png');
-    background-size: cover;
-    background-position: center;
+#start-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .start-content-wrapper {
@@ -73,11 +68,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-#start-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
 }
 
 .start-content {

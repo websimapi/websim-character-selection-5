@@ -101,8 +101,8 @@ async function init() {
     tvScreenElement.appendChild(noiseElement);
     
     // Hide the content initially
-    const startContent = tvScreenElement.querySelector('.start-content');
-    if (startContent) startContent.style.opacity = '0';
+    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
+    if (startContentWrapper) startContentWrapper.style.opacity = '0';
 
     const tvBody = new THREE.Mesh(
         new THREE.BoxGeometry(screenWidth * 1.05, screenHeight * 1.1, 0.2),
@@ -183,7 +183,7 @@ function onCartridgeInsert() {
     if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
     const tvScreenElement = document.getElementById('start-overlay');
-    const startContent = tvScreenElement.querySelector('.start-content');
+    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
     const noiseElement = document.getElementById('tv-noise');
 
     // Animate cartridge into slot and TV screen fade-in
@@ -200,7 +200,7 @@ function onCartridgeInsert() {
             // Start static noise
             noiseElement.classList.add('active');
         }, null, "-=0.2")
-        .to(startContent, { 
+        .to(startContentWrapper, { 
             opacity: 1, 
             duration: 1, 
             ease: 'power1.inOut',
@@ -217,6 +217,13 @@ function onCartridgeInsert() {
     // Define the target for the camera to look at
     const tvLookAtTarget = new THREE.Vector3(0, 1.7, -5);
 
+    // Calculate the final camera Z position to make the screen fill the view
+    const fovInRadians = camera.fov * (Math.PI / 180);
+    const screenHeightIn3D = 1.6875; // 3 * (9/16)
+    // The distance is calculated using: distance = (height / 2) / tan(fov / 2)
+    const finalZ = screenHeightIn3D / (2 * Math.tan(fovInRadians / 2));
+
+
     // Zoom into TV by animating both camera position and controls target
     const timeline = gsap.timeline({
         delay: 1,
@@ -226,7 +233,7 @@ function onCartridgeInsert() {
     timeline.to(camera.position, {
         x: 0,
         y: 1.7,
-        z: -3,
+        z: tvLookAtTarget.z + finalZ,
         duration: 6, // Slower zoom
         ease: 'power2.inOut'
     }, 0);
@@ -249,6 +256,7 @@ function transitionToApp() {
         duration: 0.5,
         onComplete: () => {
             introContainer.style.display = 'none';
+            document.getElementById('start-overlay').classList.add('transition-complete');
             if(window.startApp) window.startApp();
         }
     });

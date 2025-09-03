@@ -140,22 +140,24 @@
     </div>
     
     <div id="start-overlay" class="hidden">
-        <div class="start-content">
-            <h2 class="start-title">Ancient Champions</h2>
-            <div class="game-mode-selection">
-                <button id="host-btn" class="mode-btn host-btn">Play</button>
-                <div class="join-control-group">
-                    <input type="text" id="join-id-input" class="mode-input" placeholder="Join by Code">
-                    <button id="scan-qr-btn" class="scan-icon-btn" aria-label="Scan QR Code to Join">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor">
-                            <path d="M0 0h24v24H0V0z" fill="none"/>
-                            <path d="M9.4 10.5l-2.05 2.05c-.23.23-.38.54-.38.88V16h3.54c.34 0 .65-.14.88-.38l2.05-2.05L9.4 10.5z" opacity=".3"/>
-                            <path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm3.24-6.05L10.5 15.68c-.23.23-.54.38-.88.38H7.27v-2.35c0-.34.14-.65.38-.88l4.74-4.74 2.83 2.83z"/>
-                        </svg>
-                    </button>
+        <div class="start-content-wrapper">
+            <div class="start-content">
+                <h2 class="start-title">Ancient Champions</h2>
+                <div class="game-mode-selection">
+                    <button id="host-btn" class="mode-btn host-btn">Play</button>
+                    <div class="join-control-group">
+                        <input type="text" id="join-id-input" class="mode-input" placeholder="Join by Code">
+                        <button id="scan-qr-btn" class="scan-icon-btn" aria-label="Scan QR Code to Join">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor">
+                                <path d="M0 0h24v24H0V0z" fill="none"/>
+                                <path d="M9.4 10.5l-2.05 2.05c-.23.23-.38.54-.38.88V16h3.54c.34 0 .65-.14.88-.38l2.05-2.05L9.4 10.5z" opacity=".3"/>
+                                <path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm3.24-6.05L10.5 15.68c-.23.23-.54.38-.88.38H7.27v-2.35c0-.34.14-.65.38-.88l4.74-4.74 2.83 2.83z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button id="realtime-mode-btn" class="mode-btn realtime-btn disabled">Realtime Mode</button>
+                    <p class="mode-description">Coming Soon</p>
                 </div>
-                <button id="realtime-mode-btn" class="mode-btn realtime-btn disabled">Realtime Mode</button>
-                <p class="mode-description">Coming Soon</p>
             </div>
         </div>
     </div>

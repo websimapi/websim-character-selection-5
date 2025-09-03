@@ -85,9 +85,9 @@ async function init() {
     const tvScreenElement = document.getElementById('tv-screen-placeholder');
     tvScreenElement.style.display = 'block'; // Make it available for CSS3DRenderer
     
-    // Ensure the TV shows as off/black initially
+    // Ensure the TV shows as pure black when off initially
     const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
-    startContentWrapper.style.backgroundColor = '#0a0a0a';
+    startContentWrapper.style.backgroundColor = '#000000'; // Pure black
     startContentWrapper.style.opacity = '0';
 
     const tvScreen = new CSS3DObject(tvScreenElement);
@@ -202,7 +202,11 @@ function onCartridgeInsert() {
         })
         .to(cartridge.position, { y: -0.1, duration: 0.3 })
         .call(() => {
-            // Start static noise
+            // First make TV screen visible (black)
+            startContentWrapper.style.opacity = '1';
+        }, null, "-=0.5")
+        .call(() => {
+            // Start static noise after a brief moment
             noiseElement.classList.add('active');
         }, null, "-=0.2")
         .call(() => {
@@ -211,7 +215,6 @@ function onCartridgeInsert() {
             startContentWrapper.style.backgroundImage = `
                 radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
                 url('/main-menu-background.png')`;
-            startContentWrapper.style.opacity = '1';
         }, null, "+=3"); // Show background after 3 seconds of static
     
     // Define the target for the camera to look at

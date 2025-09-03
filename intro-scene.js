@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
-import { gsap } from "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js";
 
 let scene, camera, renderer, cssRenderer;
 let controls;
@@ -85,20 +84,30 @@ async function init() {
     // --- TV ---
     const tvScreenElement = document.getElementById('tv-screen-placeholder');
     tvScreenElement.style.display = 'block'; // Make it available for CSS3DRenderer
+    
+    // Ensure the TV shows as off/black initially
+    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
+    startContentWrapper.style.backgroundColor = '#0a0a0a';
+    startContentWrapper.style.opacity = '0';
 
     const tvScreen = new CSS3DObject(tvScreenElement);
     const screenWidth = 3;
     const screenHeight = screenWidth * (9/16);
-    tvScreen.scale.set(screenWidth / tvScreenElement.offsetWidth, screenHeight / tvScreenElement.offsetHeight, 1);
+    
+    // Ensure proper scaling based on actual element dimensions
+    tvScreen.scale.set(
+        screenWidth / tvScreenElement.offsetWidth, 
+        screenHeight / tvScreenElement.offsetHeight, 
+        1
+    );
     tvScreen.position.set(0, 1.7, -4.85);
     tvScreen.rotation.y = 0;
     scene.add(tvScreen);
     
-    // The noise element is already in the HTML, just find it.
-    const noiseElement = document.getElementById('tv-noise');
-    
-    // Hide the content initially by keeping the tv-off class
-    // No JS needed to hide it here.
+    // Create a dedicated noise element for the TV static effect
+    const noiseElement = document.createElement('div');
+    noiseElement.id = 'tv-noise';
+    tvScreenElement.appendChild(noiseElement);
 
     const tvBody = new THREE.Mesh(
         new THREE.BoxGeometry(screenWidth * 1.05, screenHeight * 1.1, 0.2),
@@ -179,6 +188,7 @@ function onCartridgeInsert() {
     if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
     const tvScreenElement = document.getElementById('tv-screen-placeholder');
+    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
     const noiseElement = document.getElementById('tv-noise');
 
     // Animate cartridge into slot and TV screen fade-in
@@ -196,9 +206,12 @@ function onCartridgeInsert() {
             noiseElement.classList.add('active');
         }, null, "-=0.2")
         .call(() => {
-            // Stop static noise and show game content on the 3D TV
+            // Stop static noise and show game background on the 3D TV
             noiseElement.classList.remove('active');
-            tvScreenElement.classList.remove('tv-off');
+            startContentWrapper.style.backgroundImage = `
+                radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
+                url('/main-menu-background.png')`;
+            startContentWrapper.style.opacity = '1';
         }, null, "+=3"); // Show background after 3 seconds of static
     
     // Define the target for the camera to look at
@@ -238,19 +251,18 @@ function onCartridgeInsert() {
 
 function transitionToApp() {
     // Smoothly fade out the 3D scene and fade in the real UI
-    // The #start-overlay is already visible on the TV. We just need to hide the 3D scene.
-    // We'll also make it 'fixed' so it covers the screen after the transition.
     const startOverlay = document.getElementById('start-overlay');
-    
+    startOverlay.classList.remove('hidden');
+    startOverlay.style.opacity = '0'; // Start transparent for fade-in
+
     gsap.timeline({
         onComplete: () => {
             introContainer.style.display = 'none';
-            // After animation, make start-overlay fixed to cover the whole screen properly
-            startOverlay.style.position = 'fixed';
             if (window.startApp) window.startApp();
         }
     })
-    .to(introContainer, { opacity: 0, duration: 0.5 }, 0);
+    .to(introContainer, { opacity: 0, duration: 0.5 }, 0)
+    .to(startOverlay, { opacity: 1, duration: 0.5 }, 0);
 }
 
 // --- Dragging Logic ---

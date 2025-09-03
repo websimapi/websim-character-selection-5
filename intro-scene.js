@@ -188,20 +188,33 @@ function onCartridgeInsert() {
         })
         .to(cartridge.position, { y: -0.1, duration: 0.3 })
         .to(startContent, { opacity: 1, duration: 1, ease: 'power1.inOut' }, "-=0.5");
+    
+    // Define the target for the camera to look at
+    const tvLookAtTarget = new THREE.Vector3(0, 1.7, -5);
 
-    // Zoom into TV
-    zoomPromise = gsap.to(camera.position, {
+    // Zoom into TV by animating both camera position and controls target
+    const timeline = gsap.timeline({
+        delay: 1,
+        onComplete: transitionToApp
+    });
+
+    timeline.to(camera.position, {
         x: 0,
         y: 1.7,
         z: -3,
         duration: 3,
-        delay: 1,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-            camera.lookAt(0, 1.7, -5);
-        },
-        onComplete: transitionToApp
-    });
+        ease: 'power2.inOut'
+    }, 0);
+
+    timeline.to(controls.target, {
+        x: tvLookAtTarget.x,
+        y: tvLookAtTarget.y,
+        z: tvLookAtTarget.z,
+        duration: 3,
+        ease: 'power2.inOut'
+    }, 0);
+
+    zoomPromise = timeline;
 }
 
 function transitionToApp() {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { gsap } from "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js";
 
 let scene, camera, renderer, cssRenderer;
 let controls;

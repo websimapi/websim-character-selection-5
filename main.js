@@ -48,10 +48,8 @@ async function startApp() {
     const preloader = document.getElementById('preloader');
     if (preloader) preloader.classList.add('hidden');
     
-    // Show the start overlay which was previously part of the 3D scene
-    const startOverlay = document.getElementById('start-overlay');
-    startOverlay.classList.remove('hidden');
-    startOverlay.style.transform = ''; // Clear 3D transforms
+    // The start overlay is now handled by the transitionToApp function
+    
     // Now that the main app is showing, it's safe to start music
     window.startAppMusic = true;
     if (audioContext && audioContext.state === 'running') {

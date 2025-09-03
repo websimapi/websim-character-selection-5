@@ -256,7 +256,15 @@ function transitionToApp() {
         duration: 0.5,
         onComplete: () => {
             introContainer.style.display = 'none';
-            document.getElementById('start-overlay').classList.add('transition-complete');
+            
+            const startOverlay = document.getElementById('start-overlay');
+            // Re-parent the overlay to the body to escape the 3D renderer's container
+            document.body.appendChild(startOverlay);
+
+            // Force style reset for the 2D view
+            startOverlay.className = 'transition-complete'; // Reset classes, add transition-complete
+            startOverlay.style.cssText = ''; // Clear all inline styles
+
             if(window.startApp) window.startApp();
         }
     });

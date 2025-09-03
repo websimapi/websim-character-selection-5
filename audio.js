@@ -44,7 +44,6 @@ function playSound(buffer) {
     source.start(0);
 }
 
-// Function to play background music
 function playBackgroundMusic() {
     if (!audioContext || !backgroundMusicBuffer || isMusicPlaying) return;
 
@@ -79,7 +78,9 @@ async function initializeAudio() {
         // Listen for state changes to automatically play music when ready
         audioContext.onstatechange = () => {
             console.log(`AudioContext state changed to: ${audioContext.state}`);
-            if (audioContext.state === 'running') {
+            if (audioContext.state === 'running' && window.startAppMusic) {
+                // Check for a flag to see if we should start music.
+                // This prevents music from playing too early.
                 playBackgroundMusic();
             }
         };
@@ -95,8 +96,7 @@ async function initializeAudio() {
         ];
         // We don't await here to prevent blocking the UI loading.
         Promise.all(soundsToLoad).then(() => {
-            // Attempt to play background music right away in case context is already running
-            playBackgroundMusic();
+            console.log('Audio buffers loaded.');
         });
 
     } catch (e) {
@@ -104,7 +104,6 @@ async function initializeAudio() {
     }
 }
 
-// Function to resume audio context
 function resumeAudioContext() {
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume().then(() => {
@@ -112,6 +111,3 @@ function resumeAudioContext() {
         });
     }
 }
-
-// Expose playBackgroundMusic to be called from intro-scene
-window.playBackgroundMusic = playBackgroundMusic;

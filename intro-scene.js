@@ -1,15 +1,22 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
-import { DragControls } from 'three/addons/controls/DragControls.js';
 
 let scene, camera, renderer, cssRenderer;
-let controls, dragControls;
-let cartridge, consoleSlot;
+let controls;
+let cartridge, consoleSlot, floor;
 let draggableObjects = [];
 const introContainer = document.getElementById('intro-scene-container');
 let interactionComplete = false;
 let zoomPromise = null;
+
+// Dragging state
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let selectedObject = null;
+const plane = new THREE.Plane();
+const planeNormal = new THREE.Vector3(0, 1, 0); // Floor is on Y-up
+const intersection = new THREE.Vector3();
 
 async function init() {
     // --- Basic Scene Setup ---
@@ -30,6 +37,7 @@ async function init() {
     cssRenderer.setSize(window.innerWidth, window.innerHeight);
     cssRenderer.domElement.style.position = 'absolute';
     cssRenderer.domElement.style.top = 0;
+    cssRenderer.domElement.style.pointerEvents = 'none'; // Allow clicks to pass through to WebGL canvas
     introContainer.appendChild(cssRenderer.domElement);
 
     // --- Lighting ---
@@ -57,13 +65,14 @@ async function init() {
     const consoleSlotTexture = textureLoader.load('/console_slot_texture.png');
 
     // --- Room ---
-    const floor = new THREE.Mesh(
+    floor = new THREE.Mesh(
         new THREE.PlaneGeometry(10, 10),
         new THREE.MeshStandardMaterial({ map: floorTexture })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
+    plane.setFromNormalAndCoplanarPoint(planeNormal, floor.position);
 
     const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture });
     const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(10, 5), wallMaterial);
@@ -85,7 +94,6 @@ async function init() {
     // Hide the content initially
     const startContent = tvScreenElement.querySelector('.start-content');
     if (startContent) startContent.style.opacity = '0';
-
 
     const tvBody = new THREE.Mesh(
         new THREE.BoxGeometry(screenWidth * 1.05, screenHeight * 1.1, 0.2),
@@ -131,13 +139,10 @@ async function init() {
     controls.minAzimuthAngle = -Math.PI / 6;
     controls.maxAzimuthAngle = Math.PI / 6;
 
-    dragControls = new DragControls(draggableObjects, camera, renderer.domElement);
-    dragControls.addEventListener('dragstart', () => controls.enabled = false);
-    dragControls.addEventListener('dragend', () => controls.enabled = true);
-    dragControls.addEventListener('drag', (event) => {
-        // Constrain dragging to roughly the floor plane
-        event.object.position.y = 0.025;
-    });
+    // --- Event Listeners ---
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
 
     window.addEventListener('resize', onWindowResize, false);
     animate();
@@ -153,7 +158,7 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
     
-    if (!interactionComplete) {
+    if (!interactionComplete && selectedObject === null) { // Only check when not dragging
         const distance = cartridge.position.distanceTo(consoleSlot.position);
         if (distance < 0.2) {
             interactionComplete = true;
@@ -170,8 +175,6 @@ function onCartridgeInsert() {
     console.log('Cartridge inserted!');
     
     // Disable controls
-    dragControls.deactivate();
-    dragControls.dispose();
     controls.enabled = false;
     
     // Play sound and resume audio context
@@ -185,7 +188,7 @@ function onCartridgeInsert() {
     gsap.timeline()
         .to(cartridge.position, {
             x: consoleSlot.position.x,
-            y: consoleSlot.position.y,
+            y: consoleSlot.position.y - 0.1, // slightly into the slot
             z: consoleSlot.position.z,
             duration: 0.5,
             ease: 'power2.in'
@@ -218,6 +221,44 @@ function transitionToApp() {
             if(window.startApp) window.startApp();
         }
     });
+}
+
+// --- Dragging Logic ---
+function onPointerDown(event) {
+    if (interactionComplete) return;
+
+    updateMouse(event);
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(draggableObjects);
+
+    if (intersects.length > 0) {
+        selectedObject = intersects[0].object;
+        controls.enabled = false;
+    }
+}
+
+function onPointerMove(event) {
+    if (selectedObject) {
+        updateMouse(event);
+
+        raycaster.setFromCamera(mouse, camera);
+        if (raycaster.ray.intersectPlane(plane, intersection)) {
+            selectedObject.position.set(intersection.x, 0.025, intersection.z);
+        }
+    }
+}
+
+function onPointerUp() {
+    if (selectedObject) {
+        selectedObject = null;
+        controls.enabled = true;
+    }
+}
+
+function updateMouse(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

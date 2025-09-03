@@ -8,7 +8,7 @@
     cursor: grab;
 }
 
-#intro-scene-container:active {
+#intro-scene-container.dragging {
     cursor: grabbing;
 }
 

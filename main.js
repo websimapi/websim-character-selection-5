@@ -34,20 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // The user gesture will resume it later.
     initializeAudio();
 
-    // The intro scene will handle preloading and then call startApp()
-    // Preload all character images before doing anything else
-    // await preloadAllCharacterImages();
-
-    // Hide preloader - moved to intro-scene.js
-    // const preloader = document.getElementById('preloader');
-    // preloader.classList.add('hidden');
-
-    // Initialize networking
-    // initializePeerJS();
-
-    // Now initialize the rest of the app
-    // initializeCharacterSelection();
-    // initializeStartOverlay();
+    // The intro scene is now loaded via a module script in index.html and will call startApp()
 });
 
 // This function is now called by intro-scene.js after the user interaction

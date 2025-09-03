@@ -103,8 +103,9 @@ function startHosting() {
     gameMode = 'scan';
     isHost = true;
     
-    // Hide start overlay
+    // Hide start overlay and show character selection
     document.getElementById('start-overlay').classList.add('hidden');
+    document.querySelector('.character-selection').classList.remove('hidden');
     
     // Show mini QR code in top right
     document.getElementById('host-qr-display').classList.add('visible');
@@ -191,8 +192,9 @@ function joinGame(hostId) {
         console.log('Connected to host:', hostId);
         connections = [conn]; // Client only has one connection (to host)
         
-        // Hide start overlay
+        // Hide start overlay and show character selection
         document.getElementById('start-overlay').classList.add('hidden');
+        document.querySelector('.character-selection').classList.remove('hidden');
         
         // Audio is now initialized on page load.
         // We just need to ensure the context is resumed if it was suspended.

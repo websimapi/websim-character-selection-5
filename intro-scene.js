@@ -264,6 +264,9 @@ function transitionToApp() {
             // Force style reset for the 2D view
             startOverlay.className = 'transition-complete'; // Reset classes, add transition-complete
             startOverlay.style.cssText = ''; // Clear all inline styles
+            
+            // Explicitly remove the 'hidden' class which might be causing issues.
+            startOverlay.classList.remove('hidden');
 
             if(window.startApp) window.startApp();
         }

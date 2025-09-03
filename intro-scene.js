@@ -9,6 +9,7 @@ let draggableObjects = [];
 const introContainer = document.getElementById('intro-scene-container');
 let interactionComplete = false;
 let zoomPromise = null;
+let animationFrameId = null; // To control the animation loop
 
 // Dragging state
 const raycaster = new THREE.Raycaster();
@@ -82,32 +83,23 @@ async function init() {
     scene.add(wallBack);
 
     // --- TV ---
-    const tvScreenElement = document.getElementById('tv-screen-placeholder');
-    tvScreenElement.style.display = 'block'; // Make it available for CSS3DRenderer
+    const tvScreenElement = document.getElementById('start-overlay');
+    tvScreenElement.classList.remove('hidden'); // Make it available for CSS3DRenderer
+    // The background color is now set directly on the overlay in CSS.
     
-    // Ensure the TV shows as pure black when off initially
-    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
-    startContentWrapper.style.backgroundColor = '#000000'; // Pure black
-    startContentWrapper.style.opacity = '0';
-
     const tvScreen = new CSS3DObject(tvScreenElement);
     const screenWidth = 3;
     const screenHeight = screenWidth * (9/16);
-    
-    // Ensure proper scaling based on actual element dimensions
-    tvScreen.scale.set(
-        screenWidth / tvScreenElement.offsetWidth, 
-        screenHeight / tvScreenElement.offsetHeight, 
-        1
-    );
+    tvScreen.scale.set(screenWidth / tvScreenElement.offsetWidth, screenHeight / tvScreenElement.offsetHeight, 1);
     tvScreen.position.set(0, 1.7, -4.85);
     tvScreen.rotation.y = 0;
     scene.add(tvScreen);
     
-    // Create a dedicated noise element for the TV static effect
-    const noiseElement = document.createElement('div');
-    noiseElement.id = 'tv-noise';
-    tvScreenElement.appendChild(noiseElement);
+    // The noise element is now part of the start-overlay in HTML to simplify management.
+    
+    // Hide the content initially
+    const startContent = tvScreenElement.querySelector('.start-content');
+    if (startContent) startContent.style.opacity = '0';
 
     const tvBody = new THREE.Mesh(
         new THREE.BoxGeometry(screenWidth * 1.05, screenHeight * 1.1, 0.2),
@@ -170,7 +162,7 @@ function onWindowResize() {
 }
 
 function animate() {
-    requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(animate);
     
     controls.update();
     renderer.render(scene, camera);
@@ -187,8 +179,8 @@ function onCartridgeInsert() {
     if (window.resumeAudioContext) window.resumeAudioContext();
     if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
-    const tvScreenElement = document.getElementById('tv-screen-placeholder');
-    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
+    const tvScreenElement = document.getElementById('start-overlay');
+    const startContent = tvScreenElement.querySelector('.start-content');
     const noiseElement = document.getElementById('tv-noise');
 
     // Animate cartridge into slot and TV screen fade-in
@@ -202,20 +194,20 @@ function onCartridgeInsert() {
         })
         .to(cartridge.position, { y: -0.1, duration: 0.3 })
         .call(() => {
-            // First make TV screen visible (black)
-            startContentWrapper.style.opacity = '1';
-        }, null, "-=0.5")
-        .call(() => {
-            // Start static noise after a brief moment
+            // Start static noise
             noiseElement.classList.add('active');
         }, null, "-=0.2")
+        .to(startContent, { 
+            opacity: 1, 
+            duration: 1, 
+            ease: 'power1.inOut',
+            delay: 3 // Wait for 3 seconds of static
+        })
         .call(() => {
-            // Stop static noise and show game background on the 3D TV
+            // Stop static noise and show game background
             noiseElement.classList.remove('active');
-            startContentWrapper.style.backgroundImage = `
-                radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
-                url('/main-menu-background.png')`;
-        }, null, "+=3"); // Show background after 3 seconds of static
+            // Background is applied via CSS class, not directly here.
+        }, null, "-=1");
     
     // Define the target for the camera to look at
     const tvLookAtTarget = new THREE.Vector3(0, 1.7, -5);
@@ -253,19 +245,33 @@ function onCartridgeInsert() {
 }
 
 function transitionToApp() {
-    // Smoothly fade out the 3D scene and fade in the real UI
-    const startOverlay = document.getElementById('start-overlay');
-    startOverlay.classList.remove('hidden');
-    startOverlay.style.opacity = '0'; // Start transparent for fade-in
+    // Stop the rendering loop to prevent it from interfering with the 2D app
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
 
-    gsap.timeline({
+    // Smoothly fade out the 3D scene
+    gsap.to(introContainer, {
+        opacity: 0,
+        duration: 0.5,
         onComplete: () => {
             introContainer.style.display = 'none';
-            if (window.startApp) window.startApp();
+            const startOverlay = document.getElementById('start-overlay');
+            startOverlay.classList.add('transition-complete');
+
+            // Crucially, reset styles that might have been applied by CSS3DRenderer
+            startOverlay.style.transform = '';
+            startOverlay.style.position = '';
+            startOverlay.style.top = '';
+            startOverlay.style.left = '';
+            startOverlay.style.width = '';
+            startOverlay.style.height = '';
+            startOverlay.style.pointerEvents = '';
+            
+            if(window.startApp) window.startApp();
         }
-    })
-    .to(introContainer, { opacity: 0, duration: 0.5 }, 0)
-    .to(startOverlay, { opacity: 1, duration: 0.5 }, 0);
+    });
 }
 
 // --- Dragging Logic ---

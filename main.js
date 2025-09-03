@@ -41,13 +41,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function startApp() {
     console.log("Starting main application...");
     
-    // The start overlay is now visible thanks to transitionToApp.
-    // The character selection screen remains hidden until a mode is chosen.
+    // The character selection screen is now shown when the host/join button is clicked.
+    // document.querySelector('.character-selection').classList.remove('hidden');
 
     // Hide preloader if it's still somehow visible
     const preloader = document.getElementById('preloader');
     if (preloader) preloader.classList.add('hidden');
     
+    // Show the start overlay which was previously part of the 3D scene
+    const startOverlay = document.getElementById('start-overlay');
+    startOverlay.classList.remove('hidden');
+    startOverlay.style.transform = ''; // Clear 3D transforms
     // Now that the main app is showing, it's safe to start music
     window.startAppMusic = true;
     if (audioContext && audioContext.state === 'running') {

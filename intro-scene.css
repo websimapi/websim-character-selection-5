@@ -12,60 +12,25 @@
     cursor: grabbing;
 }
 
-#tv-screen-placeholder {
-    display: none; 
-    width: 1280px; 
-    height: 720px;
-    background-color: #0a0a0a;
-    border: 2px solid #333;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-}
-
-#tv-screen-placeholder .start-content-wrapper {
-    width: 100%;
-    height: 100%;
-    background-color: #000000; /* Pure black when off */
-    background-size: cover;
-    background-position: center;
-    opacity: 0; 
-    transition: opacity 1s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#tv-screen-placeholder .start-content-wrapper::before {
-    content: '';
+/* #tv-noise is now inside #start-overlay */
+#start-overlay #tv-noise {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);
-    pointer-events: none;
-    z-index: 10;
-}
-
-#tv-noise {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000000; /* Pure black background for static */
+    background-color: transparent; /* Overlay is already black */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease-in;
-    z-index: 20; /* Higher z-index to appear over content */
+    z-index: 10; /* Ensure it's above the start-content */
 }
 
-#tv-noise.active {
+#start-overlay #tv-noise.active {
     opacity: 1;
 }
 
-#tv-noise::before {
+#start-overlay #tv-noise::before {
     content: '';
     position: absolute;
     top: 0;
@@ -75,7 +40,7 @@
     background-image: url('/tv_static_noise.png');
     background-size: 256px 256px;
     animation: static-pan 0.15s linear infinite;
-    opacity: 0.8; /* More visible static */
+    opacity: 0.15;
     will-change: transform;
 }
 

@@ -19,6 +19,10 @@
     background-color: black;
     overflow: hidden;
     position: relative;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
 }
 
 #tv-screen-placeholder .start-content-wrapper {

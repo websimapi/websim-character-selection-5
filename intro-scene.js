@@ -93,11 +93,9 @@ async function init() {
     tvScreen.rotation.y = 0;
     scene.add(tvScreen);
     
-    // Create a dedicated noise element for the TV static effect
-    const noiseElement = document.createElement('div');
-    noiseElement.id = 'tv-noise';
-    tvScreenElement.appendChild(noiseElement);
-    
+    // The #tv-noise element is already in the placeholder from index.html
+    // No need to create it here.
+
     // Hide the content initially
     const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
     if (startContentWrapper) startContentWrapper.style.opacity = '0';
@@ -181,7 +179,6 @@ function onCartridgeInsert() {
     if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
     const tvScreenElement = document.getElementById('tv-screen-placeholder');
-    const startContentWrapper = tvScreenElement.querySelector('.start-content-wrapper');
     const noiseElement = document.getElementById('tv-noise');
 
     // Animate cartridge into slot and TV screen fade-in
@@ -201,10 +198,10 @@ function onCartridgeInsert() {
         .call(() => {
             // Stop static noise and show game background on the 3D TV
             noiseElement.classList.remove('active');
-            startContentWrapper.style.backgroundImage = `
+            tvScreenElement.style.backgroundImage = `
                 radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
                 url('/main-menu-background.png')`;
-            startContentWrapper.style.opacity = '1';
+            tvScreenElement.style.opacity = '1';
         }, null, "+=3"); // Show background after 3 seconds of static
     
     // Define the target for the camera to look at

@@ -261,12 +261,27 @@ function transitionToApp() {
             // Re-parent the overlay to the body to escape the 3D renderer's container
             document.body.appendChild(startOverlay);
 
-            // Force style reset for the 2D view
-            startOverlay.className = 'transition-complete'; // Reset classes, add transition-complete
+            // Properly restore the overlay for normal 2D app usage
+            startOverlay.className = ''; // Clear all classes
             startOverlay.style.cssText = ''; // Clear all inline styles
             
-            // Explicitly remove the 'hidden' class which might be causing issues.
-            startOverlay.classList.remove('hidden');
+            // Restore the normal background styling
+            startOverlay.style.backgroundImage = `
+                radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.85) 100%), 
+                url('/main-menu-background.png')`;
+            startOverlay.style.backgroundSize = 'cover';
+            startOverlay.style.backgroundPosition = 'center';
+
+            // Ensure it's visible and properly positioned
+            startOverlay.style.position = 'fixed';
+            startOverlay.style.top = '0';
+            startOverlay.style.left = '0';
+            startOverlay.style.width = '100%';
+            startOverlay.style.height = '100%';
+            startOverlay.style.display = 'flex';
+            startOverlay.style.justifyContent = 'center';
+            startOverlay.style.alignItems = 'center';
+            startOverlay.style.zIndex = '100';
 
             if(window.startApp) window.startApp();
         }

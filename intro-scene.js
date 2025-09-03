@@ -84,6 +84,11 @@ async function init() {
     // --- TV ---
     const tvScreenElement = document.getElementById('start-overlay');
     tvScreenElement.classList.remove('hidden'); // Make it available for CSS3DRenderer
+    
+    // Make TV screen black initially
+    tvScreenElement.style.backgroundImage = 'none';
+    tvScreenElement.style.backgroundColor = 'black';
+    
     const tvScreen = new CSS3DObject(tvScreenElement);
     const screenWidth = 3;
     const screenHeight = screenWidth * (9/16);
@@ -170,51 +175,87 @@ function onCartridgeInsert() {
     // Disable controls
     controls.enabled = false;
     
-    // Play sound and resume audio context
+    // Resume audio context as this is the first user interaction
     if (window.resumeAudioContext) window.resumeAudioContext();
-    if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
 
     const tvScreenElement = document.getElementById('start-overlay');
     const startContent = tvScreenElement.querySelector('.start-content');
+    const tvEffect = tvScreenElement.querySelector('.tv-screen-effect');
 
-    // Animate cartridge into slot and TV screen fade-in
-    gsap.timeline()
-        .to(cartridge.position, {
-            x: consoleSlot.position.x,
-            y: consoleSlot.position.y - 0.1, // slightly into the slot
-            z: consoleSlot.position.z,
-            duration: 0.5,
-            ease: 'power2.in'
-        })
-        .to(cartridge.position, { y: -0.1, duration: 0.3 })
-        .to(startContent, { opacity: 1, duration: 1, ease: 'power1.inOut' }, "-=0.5");
+    const masterTimeline = gsap.timeline();
+
+    // Part 1: Cartridge insertion animation and sound
+    masterTimeline.to(cartridge.position, {
+        x: consoleSlot.position.x,
+        y: consoleSlot.position.y - 0.1, // slightly into the slot
+        z: consoleSlot.position.z,
+        duration: 0.5,
+        ease: 'power2.in',
+        onStart: () => {
+            if (window.playSound && window.cartridgeInsertBuffer) window.playSound(window.cartridgeInsertBuffer);
+        }
+    })
+    .to(cartridge.position, { y: -0.1, duration: 0.3 });
+
+    // Part 2: TV screen effects sequence
+    masterTimeline.call(() => {
+        // Show noisy screen
+        if (tvEffect) {
+            tvEffect.style.display = 'block';
+            tvEffect.classList.add('noise');
+        }
+    }, ">-0.2") // Start slightly before cartridge anim finishes
+    .to({}, { duration: 3 }) // Wait for 3 seconds
+    .call(() => {
+        // Start background music now
+        if (window.playBackgroundMusic) window.playBackgroundMusic();
+        
+        // Restore TV screen to game menu
+        tvScreenElement.style.backgroundImage = ''; // Reverts to CSS
+        tvScreenElement.style.backgroundColor = '';
+        if (startContent) {
+            gsap.to(startContent, { opacity: 1, duration: 1, ease: 'power1.inOut' });
+        }
+        
+        // Fade out noise effect
+        if (tvEffect) {
+            gsap.to(tvEffect, {
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => {
+                    tvEffect.style.display = 'none';
+                    tvEffect.classList.remove('noise');
+                    tvEffect.style.opacity = 1; // Reset opacity
+                }
+            });
+        }
+    });
     
-    // Define the target for the camera to look at
+    // Part 3: Camera zoom, starting as the game content appears
     const tvLookAtTarget = new THREE.Vector3(0, 1.7, -5);
 
-    // Zoom into TV by animating both camera position and controls target
-    const timeline = gsap.timeline({
-        delay: 1,
+    const cameraZoomTimeline = gsap.timeline({
         onComplete: transitionToApp
     });
-
-    timeline.to(camera.position, {
+    
+    cameraZoomTimeline.to(camera.position, {
         x: 0,
         y: 1.7,
         z: -3,
-        duration: 3,
+        duration: 6, // Slower zoom
         ease: 'power2.inOut'
-    }, 0);
-
-    timeline.to(controls.target, {
+    }, 0)
+    .to(controls.target, {
         x: tvLookAtTarget.x,
         y: tvLookAtTarget.y,
         z: tvLookAtTarget.z,
-        duration: 3,
+        duration: 6, // Slower zoom
         ease: 'power2.inOut'
     }, 0);
+    
+    masterTimeline.add(cameraZoomTimeline, ">-0.5"); // Overlap zoom start with content fade-in
 
-    zoomPromise = timeline;
+    zoomPromise = masterTimeline;
 }
 
 function transitionToApp() {

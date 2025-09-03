@@ -44,6 +44,7 @@ function playSound(buffer) {
     source.start(0);
 }
 
+// Function to play background music
 function playBackgroundMusic() {
     if (!audioContext || !backgroundMusicBuffer || isMusicPlaying) return;
 
@@ -103,6 +104,7 @@ async function initializeAudio() {
     }
 }
 
+// Function to resume audio context
 function resumeAudioContext() {
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume().then(() => {
@@ -110,3 +112,6 @@ function resumeAudioContext() {
         });
     }
 }
+
+// Expose playBackgroundMusic to be called from intro-scene
+window.playBackgroundMusic = playBackgroundMusic;

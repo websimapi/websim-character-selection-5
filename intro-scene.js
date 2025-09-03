@@ -17,6 +17,7 @@ let selectedObject = null;
 const plane = new THREE.Plane();
 const planeNormal = new THREE.Vector3(0, 1, 0); // Floor is on Y-up
 const intersection = new THREE.Vector3();
+const SNAP_DISTANCE = 0.4;
 
 async function init() {
     // --- Basic Scene Setup ---
@@ -158,14 +159,6 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
     
-    if (!interactionComplete && selectedObject === null) { // Only check when not dragging
-        const distance = cartridge.position.distanceTo(consoleSlot.position);
-        if (distance < 0.2) {
-            interactionComplete = true;
-            onCartridgeInsert();
-        }
-    }
-    
     controls.update();
     renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
@@ -239,18 +232,45 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
-    if (selectedObject) {
-        updateMouse(event);
+    if (interactionComplete || !selectedObject) return;
 
-        raycaster.setFromCamera(mouse, camera);
-        if (raycaster.ray.intersectPlane(plane, intersection)) {
-            selectedObject.position.set(intersection.x, 0.025, intersection.z);
+    updateMouse(event);
+    raycaster.setFromCamera(mouse, camera);
+
+    if (raycaster.ray.intersectPlane(plane, intersection)) {
+        selectedObject.position.set(intersection.x, 0.025, intersection.z);
+
+        // Auto-rotate cartridge to face the console slot
+        const targetRotation = Math.atan2(
+            consoleSlot.position.x - selectedObject.position.x,
+            consoleSlot.position.z - selectedObject.position.z
+        );
+        // Use slerp for smooth rotation
+        const currentQuaternion = selectedObject.quaternion.clone();
+        const targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetRotation);
+        currentQuaternion.slerp(targetQuaternion, 0.1); // Adjust 0.1 for faster/slower rotation
+        selectedObject.quaternion.copy(currentQuaternion);
+        
+        // Check for snapping
+        const distance = selectedObject.position.distanceTo(consoleSlot.position);
+        if (distance < SNAP_DISTANCE) {
+            interactionComplete = true;
+            selectedObject = null; // Stop dragging
+            onCartridgeInsert();
         }
     }
 }
 
 function onPointerUp() {
+    if (interactionComplete) return;
+
     if (selectedObject) {
+        // Check distance one last time on mouse up, in case user releases it over the slot
+        const distance = selectedObject.position.distanceTo(consoleSlot.position);
+        if (distance < SNAP_DISTANCE) {
+            interactionComplete = true;
+            onCartridgeInsert();
+        }
         selectedObject = null;
         controls.enabled = true;
     }
